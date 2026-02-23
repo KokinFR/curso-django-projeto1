@@ -1,9 +1,11 @@
-from django.test import TestCase
 from django.urls import reverse, resolve
 from recipes import views
-from recipes.models import Recipe, Category, User
+from .test_recipe_base import RecipeTestBase
 
-class RecipeViewsTest(TestCase): # noqa E302
+class RecipeViewsTest(RecipeTestBase): # noqa E302
+    def tearDown(self):
+        return super().tearDown()
+
     # Test Home
     def test_recipe_home_view_function_is_correct(self):
         view = resolve(reverse('recipes:home'))
@@ -18,6 +20,7 @@ class RecipeViewsTest(TestCase): # noqa E302
         self.assertTemplateUsed(response, 'recipes/pages/home.html')
 
     def test_recipe_home_template_shows_no_recipes_found_if_no_recipes(self):
+        Recipe.objects.get(pk=1).delete()
         response = self.client.get(reverse('recipes:home'))
         self.assertIn(
             '<h1>No recipes found here</h1>',
@@ -25,29 +28,6 @@ class RecipeViewsTest(TestCase): # noqa E302
         )
 
     def test_recipe_home_template_loads_recipes(self):
-        category = Category.objects.create(name='Category')
-        author = User.objects.create_user(
-            first_name='user',
-            last_name='name',
-            username='username',
-            password='123456',
-            email='username@email.com',
-        )
-        recipe = Recipe.objects.create(
-            category=category,
-            author=author,
-            title='Recipe Title',
-            description='Recipe Description',
-            slug='recipe-slug',
-            preparation_time=10,
-            preparation_time_unit='Minutes',
-            servings=5,
-            servings_unit='Portions',
-            preparation_steps='Recipe Preparation Steps',
-            preparation_steps_is_html=False,
-            is_published=True,
-        )
-        
         response = self.client.get(reverse('recipes:home'))
         content = response.content.decode('utf-8')
         response_context_recipe = response.context['recipes']
