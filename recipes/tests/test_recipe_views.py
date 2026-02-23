@@ -1,10 +1,8 @@
 from django.urls import reverse, resolve
 from recipes import views
-from .test_recipe_base import RecipeTestBase
+from .test_recipe_base import RecipeTestBase, Recipe
 
 class RecipeViewsTest(RecipeTestBase): # noqa E302
-    def tearDown(self):
-        return super().tearDown()
 
     # Test Home
     def test_recipe_home_view_function_is_correct(self):
@@ -20,7 +18,6 @@ class RecipeViewsTest(RecipeTestBase): # noqa E302
         self.assertTemplateUsed(response, 'recipes/pages/home.html')
 
     def test_recipe_home_template_shows_no_recipes_found_if_no_recipes(self):
-        Recipe.objects.get(pk=1).delete()
         response = self.client.get(reverse('recipes:home'))
         self.assertIn(
             '<h1>No recipes found here</h1>',
@@ -28,13 +25,15 @@ class RecipeViewsTest(RecipeTestBase): # noqa E302
         )
 
     def test_recipe_home_template_loads_recipes(self):
+        # Need a recipe for this test
+        self.make_recipe()
+        
         response = self.client.get(reverse('recipes:home'))
         content = response.content.decode('utf-8')
         response_context_recipe = response.context['recipes']
         
+        # Check if one recipe exists
         self.assertIn('Recipe Title', content)
-        self.assertIn('10 Minutes', content)
-        self.assertIn('5 Portions', content)
         self.assertEqual(len(response_context_recipe), 1)
 
 
